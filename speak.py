@@ -23,7 +23,7 @@ async def speak(text: str):
         if not text:
             raise ValueError("Empty text provided to speak function")
             
-        logging.info(f"Generating audio for text (first 5000 chars): {text[:5000]}...")
+        logging.info(f"Generating audio for text (first 10000 chars): {text[:10000]}...")
         
         client = ElevenLabs(
             api_key=ELEVENLABS_API_KEY
