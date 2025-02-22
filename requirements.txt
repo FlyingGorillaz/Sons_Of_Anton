@@ -1,0 +1,20 @@
+asyncio
+python-dotenv
+elevenlabs
+openai
+langchain
+groq # Text summary
+langchain-openai
+Pillow
+lxml_html_clean # Required for newspaper3k  package
+newspaper3k	#HTML formatted news scrapping libary
+python-dateutil  #Date and time modules
+requests	#Allow sending HTTP request
+numpy
+protobuf
+fastapi
+pydantic
+uvicorn
+torch
+transformers
+webp
