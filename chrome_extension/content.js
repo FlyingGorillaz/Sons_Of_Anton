@@ -87,7 +87,7 @@
 
     // Get the selected style from chrome storage
     chrome.storage.local.get(['selectedStyle'], (result) => {
-        const style = result.selectedStyle || 'medieval';  // Default to medieval if not set
+        const style = result.selectedStyle || 'Uwu';  // Default to "Uwu" if not set
         
         fetch("http://localhost:8000/api/data", {
             method: "POST",

@@ -21,7 +21,7 @@ app.add_middleware(
 
 class URLData(BaseModel):
     url: HttpUrl  # This ensures URL validation
-    style: str = "medieval"  # Default style if none provided
+    style: str = "Uwu"  # Default style if none provided
 
 @app.post("/api/data")
 async def process_everything(request_data: URLData):
