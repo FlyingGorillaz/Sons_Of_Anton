@@ -1,6 +1,19 @@
 const playPauseButton = document.getElementById("playPause");
 const playPauseIcon = document.getElementById("playPauseIcon");
 const extractButton = document.getElementById("extract");
+const styleSelect = document.getElementById("styleSelect");
+
+// Load previously selected style
+chrome.storage.local.get(['selectedStyle'], (result) => {
+    if (result.selectedStyle) {
+        styleSelect.value = result.selectedStyle;
+    }
+});
+
+// Save selected style when changed
+styleSelect.addEventListener('change', (e) => {
+    chrome.storage.local.set({ 'selectedStyle': e.target.value });
+});
 
 const updateUI = (state) => {
     if (state === "loading") {

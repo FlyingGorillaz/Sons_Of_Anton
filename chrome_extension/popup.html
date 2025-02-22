@@ -50,10 +50,35 @@
         button:focus {
             outline: none;
         }
+        select {
+            width: 80%;
+            padding: 8px;
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .style-container {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
     <h1>Son of Anton</h1>
+    <div class="style-container">
+        <select id="styleSelect">
+            <option value="medieval">Medieval Style</option>
+            <option value="poetic">Poetic Style</option>
+            <option value="noir">Film Noir Style</option>
+            <option value="scifi">Sci-Fi Style</option>
+            <option value="shakespearean">Shakespearean Style</option>
+        </select>
+    </div>
     <button id="extract">
         <i class="fas fa-download icon"></i> Hear Summary
     </button>

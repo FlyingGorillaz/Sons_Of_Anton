@@ -85,30 +85,38 @@
 
     const pageUrl = window.location.href;
 
-    fetch("http://localhost:8000/api/data", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "audio/mpeg, application/json"
-        },
-        body: JSON.stringify({ url: pageUrl }),
-    })
-    .then((response) => {
-        if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error(`API error: ${response.status} ${response.statusText}\n${text}`);
+    // Get the selected style from chrome storage
+    chrome.storage.local.get(['selectedStyle'], (result) => {
+        const style = result.selectedStyle || 'medieval';  // Default to medieval if not set
+        
+        fetch("http://localhost:8000/api/data", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "audio/mpeg, application/json"
+            },
+            body: JSON.stringify({ 
+                url: pageUrl,
+                style: style
+            }),
+        })
+        .then((response) => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`API error: ${response.status} ${response.statusText}\n${text}`);
+                });
+            }
+            return response.blob();
+        })
+        .then((audioBlob) => {
+            playAudio(audioBlob);
+        })
+        .catch((error) => {
+            console.error("API error:", error);
+            chrome.runtime.sendMessage({ 
+                action: "audioError",
+                error: error.message
             });
-        }
-        return response.blob();
-    })
-    .then((audioBlob) => {
-        playAudio(audioBlob);
-    })
-    .catch((error) => {
-        console.error("API error:", error);
-        chrome.runtime.sendMessage({ 
-            action: "audioError",
-            error: error.message
         });
     });
 

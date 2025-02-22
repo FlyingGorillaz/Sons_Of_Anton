@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, HttpUrl
 from fastapi.middleware.cors import CORSMiddleware
 from news_summary_extractor import ArticleExtractor
+from News_comment_styler import NewsCommentStyler
 from speak import speak
 from fastapi.responses import StreamingResponse
 import logging
@@ -20,6 +21,7 @@ app.add_middleware(
 
 class URLData(BaseModel):
     url: HttpUrl  # This ensures URL validation
+    style: str = "medieval"  # Default style if none provided
 
 @app.post("/api/data")
 async def process_everything(request_data: URLData):
@@ -37,9 +39,27 @@ async def process_everything(request_data: URLData):
         
         if not article_summary:
             raise HTTPException(status_code=400, detail="Failed to generate article summary")
-            
+        
+        # Style the article summary
+        styler = NewsCommentStyler()
+        styled_result = await styler.analyze_and_style_article(news_url, request_data.style)
+        
+        # Check if styled_result is an error message (string) or None
+        if not styled_result or isinstance(styled_result, str):
+            error_msg = styled_result if isinstance(styled_result, str) else "Unknown styling error"
+            logging.warning(f"Failed to style article: {error_msg}")
+            final_summary = article_summary
+        else:
+            try:
+                final_summary = f"{styled_result['styled_summary']}\n\nPerspectives:\n"
+                for perspective, comment in styled_result['styled_comments'].items():
+                    final_summary += f"\n{perspective}: {comment}\n"
+            except KeyError as e:
+                logging.error(f"Unexpected response format from styler: {e}")
+                final_summary = article_summary
+        
         # Generate audio
-        audio_generator = await speak(article_summary)
+        audio_generator = await speak(final_summary)
         if not audio_generator:
             raise HTTPException(status_code=500, detail="Failed to generate audio")
             
