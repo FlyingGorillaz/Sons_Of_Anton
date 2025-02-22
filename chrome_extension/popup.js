@@ -2,6 +2,8 @@ const playPauseButton = document.getElementById("playPause");
 const playPauseIcon = document.getElementById("playPauseIcon");
 const extractButton = document.getElementById("extract");
 const styleSelect = document.getElementById("styleSelect");
+const stopButton = document.getElementById("stop");
+const restartButton = document.getElementById("restart");
 
 // Add ripple effect to buttons
 const addRippleEffect = (button) => {
@@ -26,6 +28,12 @@ const addRippleEffect = (button) => {
 // Add ripple effect to buttons
 addRippleEffect(extractButton);
 addRippleEffect(playPauseButton);
+addRippleEffect(stopButton);
+addRippleEffect(restartButton);
+
+// Initialize button states
+stopButton.hidden = true;
+restartButton.hidden = true;
 
 // Load previously selected style with smooth transition
 chrome.storage.local.get(['selectedStyle'], (result) => {
@@ -62,6 +70,8 @@ const updateUI = (state) => {
         extractButton.hidden = true;
         playPauseButton.hidden = false;
         playPauseButton.disabled = true;
+        stopButton.hidden = false;
+        restartButton.hidden = true;
         setButtonState(playPauseButton, {
             backgroundColor: '#4a4a4a',
             opacity: '0.8',
@@ -77,6 +87,8 @@ const updateUI = (state) => {
         });
         extractButton.hidden = true;
         playPauseButton.hidden = false;
+        stopButton.hidden = false;
+        restartButton.hidden = false;
     } else if (state === "paused") {
         playPauseButton.disabled = false;
         setButtonState(playPauseButton, {
@@ -86,6 +98,14 @@ const updateUI = (state) => {
         });
         extractButton.hidden = true;
         playPauseButton.hidden = false;
+        stopButton.hidden = false;
+        restartButton.hidden = false;
+    } else if (state === "stopped") {
+        extractButton.hidden = false;
+        playPauseButton.hidden = true;
+        stopButton.hidden = true;
+        restartButton.hidden = true;
+        styleSelect.disabled = false;
     } else if (state === "needsInteraction") {
         playPauseButton.disabled = false;
         setButtonState(playPauseButton, {
@@ -95,6 +115,8 @@ const updateUI = (state) => {
         });
         extractButton.hidden = true;
         playPauseButton.hidden = false;
+        stopButton.hidden = false;
+        restartButton.hidden = false;
     } else if (state === "error") {
         extractButton.hidden = false;
         playPauseButton.hidden = true;
@@ -106,6 +128,8 @@ const updateUI = (state) => {
     } else {
         extractButton.hidden = false;
         playPauseButton.hidden = true;
+        stopButton.hidden = true;
+        restartButton.hidden = true;
         styleSelect.disabled = false;
         setButtonState(extractButton, {
             background: 'linear-gradient(135deg, #d4af37 0%, #f9d77e 100%)',
@@ -114,27 +138,17 @@ const updateUI = (state) => {
     }
 };
 
-// Check the state when the popup is opened
-chrome.storage.local.get(["isPlaying", "isLoading", "activeTabId"], (result) => {
-    const isPlaying = result.isPlaying || false;
-    const isLoading = result.isLoading || false;
-
+// Send message to content script
+const sendMessage = (action) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const currentTabId = tabs[0].id;
-        const isActiveTab = currentTabId === result.activeTabId;
-
-        if (isLoading && isActiveTab) {
-            updateUI("loading");
-        } else if (isPlaying && isActiveTab) {
-            updateUI("playing");
-        } else {
-            updateUI();
+        if (tabs[0]) {
+            chrome.tabs.sendMessage(tabs[0].id, { action });
         }
     });
-});
+};
 
-// Handle "Hear Summary" button click
-extractButton.addEventListener("click", () => {
+// Extract button click handler
+extractButton.addEventListener('click', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const activeTab = tabs[0];
         const activeTabId = activeTab.id;
@@ -157,12 +171,57 @@ extractButton.addEventListener("click", () => {
     });
 });
 
+// Play/Pause button click handler
+playPauseButton.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "toggleAudio" }, (response) => {
+            const isPlaying = response?.isPlaying || false;
+            chrome.storage.local.set({ isPlaying, isLoading: false });
+            updateUI(isPlaying ? "playing" : "paused");
+        });
+    });
+});
+
+// Stop button click handler
+stopButton.addEventListener('click', () => {
+    sendMessage("stopAudio");
+    updateUI("stopped");
+});
+
+// Restart button click handler
+restartButton.addEventListener('click', () => {
+    sendMessage("restartAudio");
+    updateUI("playing");
+});
+
+// Check the state when the popup is opened
+chrome.storage.local.get(["isPlaying", "isLoading", "activeTabId"], (result) => {
+    const isPlaying = result.isPlaying || false;
+    const isLoading = result.isLoading || false;
+
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const currentTabId = tabs[0].id;
+        const isActiveTab = currentTabId === result.activeTabId;
+
+        if (isLoading && isActiveTab) {
+            updateUI("loading");
+        } else if (isPlaying && isActiveTab) {
+            updateUI("playing");
+        } else {
+            updateUI();
+        }
+    });
+});
+
 // Handle messages from content script
 chrome.runtime.onMessage.addListener((message) => {
     if (message.action === "audioStarted") {
         chrome.storage.local.set({ isPlaying: true, isLoading: false });
         updateUI("playing");
     } else if (message.action === "audioCompleted") {
+        chrome.storage.local.set({ isPlaying: false, isLoading: false });
+        updateUI("stopped");
+    } else if (message.action === "audioPaused") {
         chrome.storage.local.set({ isPlaying: false, isLoading: false });
         updateUI("paused");
     } else if (message.action === "audioNeedsUserInteraction") {
@@ -173,15 +232,4 @@ chrome.runtime.onMessage.addListener((message) => {
         alert(message.error);
         updateUI("error");
     }
-});
-
-// Handle "Play/Pause" button click
-playPauseButton.addEventListener("click", () => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, { action: "toggleAudio" }, (response) => {
-            const isPlaying = response?.isPlaying || false;
-            chrome.storage.local.set({ isPlaying, isLoading: false });
-            updateUI(isPlaying ? "playing" : "paused");
-        });
-    });
 });

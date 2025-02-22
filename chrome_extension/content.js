@@ -2,6 +2,7 @@
     let audio = null;
     let isPlaying = false;
     let pendingAudioBlob = null;
+    let currentAudioBlob = null;  // Store the current audio blob for restart functionality
 
     const playAudio = async (audioBlob) => {
         try {
@@ -13,6 +14,7 @@
                 audio = null;
             }
             audio = new Audio(audioUrl);
+            currentAudioBlob = audioBlob;  // Store the blob for restart
             
             // Set up event listeners
             audio.addEventListener("ended", () => {
@@ -23,6 +25,12 @@
             audio.addEventListener("play", () => {
                 isPlaying = true;
                 chrome.runtime.sendMessage({ action: "audioStarted" });
+            });
+
+            audio.addEventListener("pause", () => {
+                if (!audio.ended) {  // Only send pause event if not ended
+                    chrome.runtime.sendMessage({ action: "audioPaused" });
+                }
             });
 
             audio.addEventListener("error", (e) => {
@@ -53,6 +61,28 @@
                 action: "audioError",
                 error: error.message
             });
+        }
+    };
+
+    const stopAudio = () => {
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+            audio.src = "";
+            audio = null;
+            isPlaying = false;
+            pendingAudioBlob = null;
+            // Don't clear currentAudioBlob in case we want to restart
+        }
+    };
+
+    const restartAudio = async () => {
+        if (currentAudioBlob) {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+            await playAudio(currentAudioBlob);
         }
     };
 
@@ -87,7 +117,7 @@
 
     // Get the selected style from chrome storage
     chrome.storage.local.get(['selectedStyle'], (result) => {
-        const style = result.selectedStyle || 'Uwu';  // Default to "Uwu" if not set
+        const style = result.selectedStyle || 'RAP';  // Default to RAP if not set
         
         fetch("http://localhost:8000/api/data", {
             method: "POST",
@@ -124,6 +154,14 @@
         if (message.action === "toggleAudio") {
             toggleAudioPlayback().then(currentPlayingState => {
                 sendResponse({ isPlaying: currentPlayingState });
+            });
+            return true; // Keep the message channel open for the async response
+        } else if (message.action === "stopAudio") {
+            stopAudio();
+            sendResponse({ stopped: true });
+        } else if (message.action === "restartAudio") {
+            restartAudio().then(() => {
+                sendResponse({ restarted: true });
             });
             return true; // Keep the message channel open for the async response
         }
