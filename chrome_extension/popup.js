@@ -3,51 +3,114 @@ const playPauseIcon = document.getElementById("playPauseIcon");
 const extractButton = document.getElementById("extract");
 const styleSelect = document.getElementById("styleSelect");
 
-// Load previously selected style
+// Add ripple effect to buttons
+const addRippleEffect = (button) => {
+    button.addEventListener('click', function(e) {
+        const ripple = document.createElement('div');
+        ripple.classList.add('ripple');
+        this.appendChild(ripple);
+        
+        const rect = button.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size/2;
+        const y = e.clientY - rect.top - size/2;
+        
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        
+        setTimeout(() => ripple.remove(), 600);
+    });
+};
+
+// Add ripple effect to buttons
+addRippleEffect(extractButton);
+addRippleEffect(playPauseButton);
+
+// Load previously selected style with smooth transition
 chrome.storage.local.get(['selectedStyle'], (result) => {
     if (result.selectedStyle) {
+        styleSelect.style.transition = 'none';
         styleSelect.value = result.selectedStyle;
+        // Force a reflow
+        styleSelect.offsetHeight;
+        styleSelect.style.transition = '';
     }
 });
 
-// Save selected style when changed
+// Save selected style with visual feedback
 styleSelect.addEventListener('change', (e) => {
     chrome.storage.local.set({ 'selectedStyle': e.target.value });
+    styleSelect.style.transform = 'scale(1.05)';
+    setTimeout(() => {
+        styleSelect.style.transform = 'scale(1)';
+    }, 200);
 });
 
 const updateUI = (state) => {
+    const setButtonState = (button, config) => {
+        Object.entries(config).forEach(([key, value]) => {
+            if (key === 'innerHTML') {
+                button.innerHTML = value;
+            } else {
+                button.style[key] = value;
+            }
+        });
+    };
+
     if (state === "loading") {
         extractButton.hidden = true;
         playPauseButton.hidden = false;
         playPauseButton.disabled = true;
-        playPauseButton.style.backgroundColor = "#d3d3d3";
-        playPauseButton.innerHTML = `<i class="fas fa-spinner fa-spin icon"></i> Loading...`;
+        setButtonState(playPauseButton, {
+            backgroundColor: '#4a4a4a',
+            opacity: '0.8',
+            innerHTML: `<i class="fas fa-spinner fa-spin icon"></i> Processing`
+        });
+        styleSelect.disabled = true;
     } else if (state === "playing") {
         playPauseButton.disabled = false;
-        playPauseButton.style.backgroundColor = "#28a745";
-        playPauseButton.innerHTML = `<i class="fas fa-pause icon"></i> Pause`;
+        setButtonState(playPauseButton, {
+            background: 'linear-gradient(135deg, #d4af37 0%, #f9d77e 100%)',
+            opacity: '1',
+            innerHTML: `<i class="fas fa-pause icon"></i> Pause`
+        });
         extractButton.hidden = true;
         playPauseButton.hidden = false;
     } else if (state === "paused") {
         playPauseButton.disabled = false;
-        playPauseButton.style.backgroundColor = "#007bff";
-        playPauseButton.innerHTML = `<i class="fas fa-play icon"></i> Play`;
+        setButtonState(playPauseButton, {
+            background: 'linear-gradient(135deg, #d4af37 0%, #f9d77e 100%)',
+            opacity: '1',
+            innerHTML: `<i class="fas fa-play icon"></i> Resume`
+        });
         extractButton.hidden = true;
         playPauseButton.hidden = false;
     } else if (state === "needsInteraction") {
         playPauseButton.disabled = false;
-        playPauseButton.style.backgroundColor = "#007bff";
-        playPauseButton.innerHTML = `<i class="fas fa-play icon"></i> Start Audio`;
+        setButtonState(playPauseButton, {
+            background: 'linear-gradient(135deg, #d4af37 0%, #f9d77e 100%)',
+            opacity: '1',
+            innerHTML: `<i class="fas fa-play icon"></i> Start`
+        });
         extractButton.hidden = true;
         playPauseButton.hidden = false;
     } else if (state === "error") {
         extractButton.hidden = false;
         playPauseButton.hidden = true;
-        extractButton.innerHTML = `<i class="fas fa-redo icon"></i> Try Again`;
+        styleSelect.disabled = false;
+        setButtonState(extractButton, {
+            background: 'linear-gradient(135deg, #8b0000 0%, #a83232 100%)',
+            innerHTML: `<i class="fas fa-redo icon"></i> Try Again`
+        });
     } else {
         extractButton.hidden = false;
         playPauseButton.hidden = true;
-        extractButton.innerHTML = `<i class="fas fa-download icon"></i> Hear Summary`;
+        styleSelect.disabled = false;
+        setButtonState(extractButton, {
+            background: 'linear-gradient(135deg, #d4af37 0%, #f9d77e 100%)',
+            innerHTML: `<i class="fas fa-headphones icon"></i> Listen Now`
+        });
     }
 };
 
