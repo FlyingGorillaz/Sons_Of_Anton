@@ -79,7 +79,7 @@ class NewsCommentStyler:
                 messages=[
                     {
                         "role": "user",
-                        "content": f"Summarize this news article briefly:\n{article.text}"
+                        "content": f"Summarize this news article briefly keep the length less than 30 seconds of speech:\n{article.text}"
                     }
                 ]
             )

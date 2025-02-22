@@ -24,7 +24,6 @@
         h1 {
             font-family: 'Playfair Display', serif;
             font-size: 28px;
-            color: #ffffff;
             margin-bottom: 30px;
             font-weight: 700;
             letter-spacing: 1.2px;
@@ -43,36 +42,12 @@
             background: #d4af37;
         }
 
-        button {
-            border: none;
-            padding: 15px 35px;
-            margin: 20px;
-            font-size: 18px;
-            cursor: pointer;
-            border-radius: 35px;
-            transition: all 0.3s ease;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 500;
-            letter-spacing: 0.6px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #d4af37 0%, #f9d77e 100%);
-            color: #1a1a1a;
+        .style-container {
+            margin-bottom: 25px;
             position: relative;
-            overflow: hidden;
-            min-width: 200px;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0px 8px 15px rgba(212, 175, 55, 0.3);
-        }
-
-        button:active {
-            transform: translateY(1px);
-        }
-
-        .icon {
-            margin-right: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
 
         select {
@@ -93,21 +68,6 @@
             max-width: 400px;
         }
 
-        select:focus {
-            outline: none;
-            border-color: #f9d77e;
-            background-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        .style-container {
-            margin-bottom: 25px;
-            position: relative;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-        }
-
         .style-container::after {
             content: '▼';
             font-size: 14px;
@@ -119,33 +79,60 @@
             pointer-events: none;
         }
 
-        /* Custom styling for loading state */
-        .loading {
-            animation: pulse 1.5s infinite;
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
+        button {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            letter-spacing: 0.6px;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 35px;
+            background: linear-gradient(135deg, #d4af37 0%, #f9d77e 100%);
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        /* Disabled state styling */
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .icon {
+            font-size: 16px;
+        }
+
+        button.secondary {
+            background: linear-gradient(135deg, #2c2c2c 0%, #3a3a3a 100%);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+        }
+
         button:disabled {
-            background: #4a4a4a;
+            opacity: 0.6;
             cursor: not-allowed;
             transform: none;
-        }
-
-        /* Error state */
-        .error {
-            color: #ff6b6b;
-            background: linear-gradient(135deg, #8b0000 0%, #a83232 100%);
         }
     </style>
 </head>
 <body>
-    <h1>Son of Anton</h1>
+    <h1>Sons of Anton</h1>
     <div class="style-container">
         <select id="styleSelect">
             <option value="RAP">Rap style</option>
@@ -155,12 +142,20 @@
             <option value="shakespearean">Shakespearean Style</option>
         </select>
     </div>
-    <button id="extract">
-        <i class="fas fa-headphones icon"></i> Listen Now
-    </button>
-    <button id="playPause" hidden>
-        <i id="playPauseIcon" class="fas fa-pause icon"></i> Pause
-    </button>
+    <div class="control-buttons">
+        <button id="extract">
+            <i class="fas fa-headphones icon"></i> Listen Now
+        </button>
+        <button id="playPause" hidden>
+            <i id="playPauseIcon" class="fas fa-pause icon"></i> Pause
+        </button>
+        <button id="stop" class="secondary">
+            <i class="fas fa-stop icon"></i> Stop
+        </button>
+        <button id="restart" class="secondary">
+            <i class="fas fa-redo icon"></i> Restart
+        </button>
+    </div>
     <script src="popup.js"></script>
 </body>
 </html>

@@ -15,5 +15,5 @@ logging.basicConfig(
             logging.FileHandler(LOG_FILE_PATH),  # Handler for logging to a file
             logging.StreamHandler()  # Handler for logging to the console
         ],
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
