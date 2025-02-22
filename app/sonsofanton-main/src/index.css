@@ -1,0 +1,76 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 215 25% 8%;
+    --foreground: 0 0% 98%;
+    --card: 215 25% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 215 25% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 172 66% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 215 25% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 215 25% 16%;
+    --muted-foreground: 215 5% 65%;
+    --accent: 215 25% 16%;
+    --accent-foreground: 0 0% 98%;
+    --border: 215 25% 16%;
+    --input: 215 25% 16%;
+    --ring: 172 66% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+.news-card {
+  @apply relative overflow-hidden rounded-xl bg-gradient-to-b from-card to-card/90 p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl;
+}
+
+.mode-switch {
+  @apply flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium transition-colors hover:bg-secondary/80;
+}
+
+.nav-item {
+  @apply flex items-center gap-2 rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground;
+}
+
+.nav-item.active {
+  @apply bg-secondary text-foreground;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-secondary hover:bg-secondary/80;
+}
+
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
