@@ -5,9 +5,13 @@ import os
 import asyncio
 from utils import timing
 import io
+from Classify_commenter import CommentVoiceMatcher
 
 load_dotenv()
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+
+# Initialize the CommentVoiceMatcher once
+voice_matcher = CommentVoiceMatcher()
 
 
 @timing
@@ -25,6 +29,22 @@ async def speak(text: str):
             
         logging.info(f"Generating audio for text (first 10000 chars): {text[:10000]}...")
         
+        # Get voice recommendation
+        try:
+            perspectives = await voice_matcher.get_relevant_perspectives(text)
+            if not perspectives:
+                logging.warning("No perspectives found, using default voice")
+                custom_voice_id = "onwK4e9ZLuTAKqWW03F9"  # Default voice
+            else:
+                # Use the first perspective for now
+                persona = voice_matcher.analyze_perspective(perspectives[0])
+                matched_voice = voice_matcher.find_best_matching_voice(persona)
+                custom_voice_id = matched_voice.voice_id
+                logging.info(f"Selected voice: {matched_voice.name} ({custom_voice_id}) for perspective: {perspectives[0]}")
+        except Exception as e:
+            logging.error(f"Error getting voice recommendation: {e}")
+            custom_voice_id = "onwK4e9ZLuTAKqWW03F9"  # Fallback to default voice
+        
         client = ElevenLabs(
             api_key=ELEVENLABS_API_KEY
         )
@@ -34,7 +54,7 @@ async def speak(text: str):
             audio_stream = client.generate(
                 text=text,
                 voice=Voice(
-                    voice_id="onwK4e9ZLuTAKqWW03F9",
+                    voice_id=custom_voice_id,
                     settings=VoiceSettings(
                         stability=0.5,
                         similarity_boost=0.75,
